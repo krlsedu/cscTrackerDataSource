@@ -15,24 +15,18 @@ def dataset():
     print("request.args", metric, value, period, request.args)
     response = requests.get('http://backend:8080/heartbeats?metric=' + metric + '&period=' + period,
                             headers=request.headers)
-    print("ResponseCode: {}".format(response.status_code))
     heartbeats = response.json()
     data_set = {}
     if response.status_code == 200:
-        print("In", 200)
         try:
             for heartbeat in heartbeats:
-                print("For")
                 metric_ = heartbeat[metric]
                 value_ = heartbeat[value]
-                print("metric_", metric_, "value_", value_)
                 if metric_ is not None:
                     if metric_ in data_set:
                         data_set[metric_] += value_
                     else:
                         data_set[metric_] = value_
-            print("data_set", data_set)
-            return data_set
         except Exception as e:
             print("Error: ", e)
             return response.text, response.status_code
