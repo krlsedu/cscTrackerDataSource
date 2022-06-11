@@ -19,10 +19,13 @@ def dataset():
     heartbeats = response.json()
     data_set = {}
     if response.status_code == 200:
+        print("In", 200)
         try:
             for heartbeat in heartbeats:
+                print("For")
                 metric_ = heartbeat[metric]
                 value_ = heartbeat[value]
+                print("metric_", metric_, "value_", value_)
                 if metric_ is not None:
                     if metric_ in data_set:
                         data_set[metric_] += value_
