@@ -10,10 +10,12 @@ app = Flask(__name__)
 def dataset():
     metric = request.args.get('metric')
     value = request.args.get('value')
+    period = request.args.get('period')
     if value is None:
         value = "timeSpentMillis"
-    logging.info(request.args)
-    response = requests.get('http://backend:8080/heartbeats', headers=request.headers, params=request.args)
+    logging.info("request.args", metric, value, period, request.args)
+    response = requests.get('http://backend:8080/heartbeats?metric=' + metric + '&period=' + period,
+                            headers=request.headers)
     logging.info("ResponseCode: {}".format(response.status_code))
     heartbeats = response.json()
     data_set = {}
