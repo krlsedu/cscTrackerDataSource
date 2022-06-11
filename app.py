@@ -5,7 +5,7 @@ import logging
 
 app = Flask(__name__)
 
-logging.basicConfig(filename="app.log",
+logging.basicConfig(filename="/var/log/app.log",
                     format='%(asctime)s %(levelname)-8s %(message)s',
                     level=logging.INFO,
                     datefmt='%Y-%m-%d %H:%M:%S')
