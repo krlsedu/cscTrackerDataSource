@@ -1,14 +1,8 @@
 from flask import Flask, request
 import requests
 from datetime import datetime
-import logging
 
 app = Flask(__name__)
-
-logging.basicConfig(filename="/var/log/app.log",
-                    format='%(asctime)s %(levelname)-8s %(message)s',
-                    level=logging.INFO,
-                    datefmt='%Y-%m-%d %H:%M:%S')
 
 
 @app.route('/dataset', methods=['GET'])
@@ -18,10 +12,10 @@ def dataset():
     period = request.args.get('period')
     if value is None:
         value = "timeSpentMillis"
-    logging.info("request.args", metric, value, period, request.args)
+    print("request.args", metric, value, period, request.args)
     response = requests.get('http://backend:8080/heartbeats?metric=' + metric + '&period=' + period,
                             headers=request.headers)
-    logging.info("ResponseCode: {}".format(response.status_code))
+    print("ResponseCode: {}".format(response.status_code))
     heartbeats = response.json()
     data_set = {}
     if response.status_code == 200:
@@ -35,10 +29,10 @@ def dataset():
                     else:
                         data_set[metric_] = value_
         except Exception as e:
-            logging.error("Error: ", e)
+            print("Error: ", e)
             return response.text, response.status_code
     else:
-        logging.warning(response.status_code, "else")
+        print(response.status_code, "else")
         return response.text, response.status_code
     return data_set
 
