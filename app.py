@@ -12,7 +12,7 @@ def dataset():
     if value is None:
         value = "timeSpentMillis"
     print(metric, value, request.args)
-    response = requests.get('http://backend:8089/heartbeats', headers=request.headers, params=request.args)
+    response = requests.get('http://backend:8080/heartbeats', headers=request.headers, params=request.args)
     heartbeats = response.json()
     data_set = {}
     if response.status_code == 200:
@@ -37,7 +37,7 @@ def dataset():
 @app.route('/series', methods=['GET'])
 def serie():
     metric = request.args.get('metric')
-    response = requests.get('http://backend:8089/heartbeats', headers=request.headers, params=request.args)
+    response = requests.get('http://backend:8080/heartbeats', headers=request.headers, params=request.args)
     heartbeats = response.json()
     print(response.status_code)
     map_series = {}
