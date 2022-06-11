@@ -31,6 +31,7 @@ def dataset():
                         data_set[metric_] += value_
                     else:
                         data_set[metric_] = value_
+            print("data_set", data_set)
             return data_set
         except Exception as e:
             print("Error: ", e)
