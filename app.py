@@ -1,6 +1,7 @@
 from flask import Flask, request
 import requests
 from datetime import datetime
+import logging
 
 app = Flask(__name__)
 
@@ -11,8 +12,9 @@ def dataset():
     value = request.args.get('value')
     if value is None:
         value = "timeSpentMillis"
-    print(metric, value, request.args)
+    logging.info(request.args)
     response = requests.get('http://backend:8080/heartbeats', headers=request.headers, params=request.args)
+    logging.info("ResponseCode: {}".format(response.status_code))
     heartbeats = response.json()
     data_set = {}
     if response.status_code == 200:
