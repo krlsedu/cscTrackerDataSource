@@ -26,10 +26,10 @@ def dataset():
                     else:
                         data_set[metric_] = value_
         except Exception as e:
-            print(e)
+            print("Error: ", e)
             return response.text, response.status_code
     else:
-        print(response.text, response.status_code)
+        print(response.status_code, "else")
         return response.text, response.status_code
     return data_set
 
