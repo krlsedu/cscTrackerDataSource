@@ -1,3 +1,5 @@
+import json
+
 from flask import Flask, request
 import requests
 from datetime import datetime
@@ -38,7 +40,7 @@ def dataset():
     for key in grouped:
         dataset = {'label': key, 'value': grouped[key]}
         datasets.append(dataset)
-    return str(datasets), 200, {'Content-Type': 'application/json'}
+    return json.dumps(datasets), 200, {'Content-Type': 'application/json'}
 
 
 @app.route('/series', methods=['GET'])
@@ -91,7 +93,7 @@ def serie():
         serie['x'] = key
         serie['y'] = arr
         series.append(serie)
-    return str(series), 200, {'Content-Type': 'application/json'}
+    return json.dumps(series), 200, {'Content-Type': 'application/json'}
 
 
 if __name__ == '__main__':
