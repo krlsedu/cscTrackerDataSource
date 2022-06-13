@@ -16,24 +16,29 @@ def dataset():
     response = requests.get('http://backend:8080/heartbeats?metric=' + metric + '&period=' + period,
                             headers=request.headers)
     heartbeats = response.json()
-    data_set = {}
+    grouped = {}
     if response.status_code == 200:
         try:
             for heartbeat in heartbeats:
                 metric_ = heartbeat[metric]
                 value_ = heartbeat[value]
                 if metric_ is not None:
-                    if metric_ in data_set:
-                        data_set[metric_] += value_
+                    if metric_ in grouped:
+                        grouped[metric_] += value_
                     else:
-                        data_set[metric_] = value_
+                        grouped[metric_] = value_
         except Exception as e:
             print("Error: ", e)
             return response.text, response.status_code
     else:
         print(response.status_code, "else")
         return response.text, response.status_code
-    return data_set
+
+    datasets = []
+    for key in grouped:
+        dataset = {'label': key, 'value': grouped[key]}
+        datasets.append(dataset)
+    return datasets, 200
 
 
 @app.route('/series', methods=['GET'])
