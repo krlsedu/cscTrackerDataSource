@@ -38,7 +38,7 @@ def dataset():
     for key in grouped:
         dataset = {'label': key, 'value': grouped[key]}
         datasets.append(dataset)
-    return datasets, 200
+    return str(datasets), 200, {'Content-Type': 'application/json'}
 
 
 @app.route('/series', methods=['GET'])
