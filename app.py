@@ -3,9 +3,12 @@ import json
 from flask import Flask, request
 import requests
 from datetime import datetime
+from prometheus_flask_exporter import PrometheusMetrics
 
 app = Flask(__name__)
 
+# group by endpoint rather than path
+metrics = PrometheusMetrics(app, group_by='endpoint')
 
 @app.route('/dataset', methods=['GET'])
 def dataset():
