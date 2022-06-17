@@ -20,7 +20,7 @@ def dataset():
     if value is None:
         value = "timeSpentMillis"
     print("request.args", metric, value, period, request.args)
-    response = requests.get('http://localhost:8089/heartbeats-filters', params=request.args,
+    response = requests.get('http://backend:8080/heartbeats-filters', params=request.args,
                             headers=request.headers)
     filters = response.json()
 
