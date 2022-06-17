@@ -1,5 +1,6 @@
 import json
 
+import psycopg2
 from flask import Flask, request
 import requests
 from datetime import datetime
@@ -10,6 +11,7 @@ app = Flask(__name__)
 # group by endpoint rather than path
 metrics = PrometheusMetrics(app, group_by='endpoint')
 
+
 @app.route('/dataset', methods=['GET'])
 def dataset():
     metric = request.args.get('metric')
@@ -18,31 +20,37 @@ def dataset():
     if value is None:
         value = "timeSpentMillis"
     print("request.args", metric, value, period, request.args)
-    response = requests.get('http://backend:8080/heartbeats?metric=' + metric + '&period=' + period,
+    response = requests.get('http://localhost:8089/heartbeats-filters', params=request.args,
                             headers=request.headers)
-    heartbeats = response.json()
-    grouped = {}
-    if response.status_code == 200:
-        try:
-            for heartbeat in heartbeats:
-                metric_ = heartbeat[metric]
-                value_ = heartbeat[value]
-                if metric_ is not None:
-                    if metric_ in grouped:
-                        grouped[metric_] += value_
-                    else:
-                        grouped[metric_] = value_
-        except Exception as e:
-            print("Error: ", e)
-            return response.text, response.status_code
-    else:
-        print(response.status_code, "else")
-        return response.text, response.status_code
+    filters = response.json()
 
+    conn = psycopg2.connect(
+        host="postgres",
+        database="postgres",
+        user="postgres",
+        password="postgres")
+
+    cursor = conn.cursor()
+
+    metric_1 = filters['metric']
+    filters_value_ = filters['value']
+    ini_ = filters['dateIni']
+    end_ = filters['dateEnd']
+    user_ = filters['userId']
+    filters_metric_ = "SELECT " + metric_1 + ", sum(" + filters_value_ + ") " \
+                                                                         "FROM heartbeat where date_time " \
+                                                                         "between '" + ini_ + "' and '" + end_ + \
+                      "' and user_id = " + str(user_) + \
+                      " group by " + metric_1
+    cursor.execute(
+        filters_metric_)
+    heartbeats = cursor.fetchall()
     datasets = []
-    for key in grouped:
-        dataset = {'label': key, 'value': grouped[key]}
+    for row in heartbeats:
+        print(row)
+        dataset = {'label': row[0], 'value': int(row[1])}
         datasets.append(dataset)
+    conn.close()
     return json.dumps(datasets), 200, {'Content-Type': 'application/json'}
 
 
