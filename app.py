@@ -48,8 +48,10 @@ def dataset():
     datasets = []
     for row in heartbeats:
         print(row)
-        dataset = {'label': row[0], 'value': int(row[1])}
-        datasets.append(dataset)
+        row_ = row[0]
+        if row_ is not None:
+            dataset = {'label': row_, 'value': int(row[1])}
+            datasets.append(dataset)
     conn.close()
     return json.dumps(datasets), 200, {'Content-Type': 'application/json'}
 
