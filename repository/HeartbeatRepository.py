@@ -1,9 +1,10 @@
 import psycopg2
 
 from model.Heartbeat import Heartbeat
+from service.Interceptor import Interceptor
 
 
-class HeartbeatRepository:
+class HeartbeatRepository(Interceptor):
     def __init__(self):
         self.conn = psycopg2.connect(
             host="postgres",
@@ -24,9 +25,7 @@ class HeartbeatRepository:
                                 " FROM heartbeat where date_time between '" \
                                 + ini_ + "' and '" + end_ + "' and user_id = " + str(user_)
 
-        cursor = self.conn.cursor()
-        cursor.execute(select_heartbeats)
-        cursor_heartbeats = cursor.fetchall()
+        cursor, cursor_heartbeats = self.execute_query(select_heartbeats)
 
         heartbeats = []
         for row in cursor_heartbeats:
@@ -42,6 +41,12 @@ class HeartbeatRepository:
             heartbeats.append(hb)
         cursor.close()
         return heartbeats
+
+    def execute_query(self, select_heartbeats):
+        cursor = self.conn.cursor()
+        cursor.execute(select_heartbeats)
+        cursor_heartbeats = cursor.fetchall()
+        return cursor, cursor_heartbeats
 
     def get_grouped(self, filters):
         cursor = self.conn.cursor()

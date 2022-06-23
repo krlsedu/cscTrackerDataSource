@@ -1,11 +1,12 @@
 import pandas
 
 from repository.FiltersRepository import FiltersRepository
+from service.Interceptor import Interceptor
 
 filters_repository = FiltersRepository()
 
 
-class BarDataSetService:
+class BarDataSetService(Interceptor):
     def __init__(self, heartbeat_repository):
         self.heartbeat_repository = heartbeat_repository
 
@@ -34,9 +35,7 @@ class BarDataSetService:
                 if metric not in metrics:
                     metrics.append(metric)
             group[date] = metric_group
-        dataset = {}
-        dataset['categories'] = categories
-        dataset['series'] = []
+        dataset = {'categories': categories, 'series': []}
         series = {}
         for category in categories:
             for metric in metrics:

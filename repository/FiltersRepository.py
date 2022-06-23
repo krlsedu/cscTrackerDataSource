@@ -1,8 +1,10 @@
 from flask import request
 import requests
 
+from service.Interceptor import Interceptor
 
-class FiltersRepository:
+
+class FiltersRepository(Interceptor):
     def __init__(self):
         pass
 

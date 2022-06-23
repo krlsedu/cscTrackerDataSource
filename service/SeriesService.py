@@ -1,9 +1,10 @@
 from repository.FiltersRepository import FiltersRepository
+from service.Interceptor import Interceptor
 
 filters_repository = FiltersRepository()
 
 
-class SeriesService:
+class SeriesService(Interceptor):
     def __init__(self, heartbeat_repository):
         self.heartbeat_repository = heartbeat_repository
 
