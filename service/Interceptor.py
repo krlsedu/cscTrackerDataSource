@@ -25,5 +25,5 @@ class Interceptor:
         metrics = {'clazz': clazz, 'method': methodName, 'executionTime': execution_time,
                    'appName': 'CscTrackerDataSource', 'fullClassName': className}
 
-        response = requests.post('http://metrics-service:5060/metric', json=metrics)
+        response = requests.post('http://metrics-service:5000/metric', json=metrics)
         print(metrics, response.status_code)
