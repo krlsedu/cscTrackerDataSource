@@ -19,3 +19,9 @@ class FiltersRepository(Interceptor):
                                 headers=request.headers)
         filters = response.json()
         return filters
+
+    def get_filters_generic(self):
+        response = requests.get('http://service:5000/filters', params=request.args,
+                                headers=request.headers)
+        filters = response.json()
+        return filters
