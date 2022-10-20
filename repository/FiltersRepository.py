@@ -15,8 +15,13 @@ class FiltersRepository(Interceptor):
         if value is None:
             value = "timeSpentMillis"
         print("request.args", metric, value, period, request.args)
-        response = requests.get('http://backend:8080/heartbeats-filters', params=request.args,
-                                headers=request.headers)
+        if request.headers.get('userName') is None:
+            heeaders = {"userName": "krlsedu@gmail.com"}
+            response = requests.get('http://backend:8080/heartbeats-filters', params=request.args,
+                                    headers=heeaders)
+        else:
+            response = requests.get('http://backend:8080/heartbeats-filters', params=request.args,
+                                    headers=request.headers)
         filters = response.json()
         return filters
 
