@@ -1,7 +1,11 @@
 import psycopg2
+from flask import request
 
 from model.Heartbeat import Heartbeat
+from repository.GenericRepository import GenericRepository
 from service.Interceptor import Interceptor
+
+generic_repository = GenericRepository()
 
 
 class HeartbeatRepository(Interceptor):
@@ -16,6 +20,9 @@ class HeartbeatRepository(Interceptor):
         ini_ = filters['dateIni']
         end_ = filters['dateEnd']
         user_ = filters['userId']
+        dashboard_token_ = request.args.get('dashboardToken')
+        if dashboard_token_ == 'undefined':
+            dashboard_token_ = None
         heartbeat = Heartbeat()
         if keys is None:
             select_heartbeats = "SELECT " + heartbeat.get_cols_select() + " FROM heartbeat where date_time between '" \
@@ -23,7 +30,16 @@ class HeartbeatRepository(Interceptor):
         else:
             select_heartbeats = "SELECT " + str(keys).replace("[", "").replace("]", "").replace("'", "") + \
                                 " FROM heartbeat where date_time between '" \
-                                + ini_ + "' and '" + end_ + "' and user_id = " + str(user_)
+                                + ini_ + "' and '" + end_ + "'"
+
+        if dashboard_token_ is not None:
+            dash_info = generic_repository.get_object("external_dash", ["hash"], {"hash": dashboard_token_})
+            if dash_info is not None:
+                select_heartbeats += " and client_name = '" + str(dash_info['client_name']) + "'"
+            else:
+                select_heartbeats += " and user_id = " + str(user_)
+        else:
+            select_heartbeats += " and user_id = " + str(user_)
 
         cursor, cursor_heartbeats = self.execute_query(select_heartbeats)
 
@@ -88,11 +104,22 @@ class HeartbeatRepository(Interceptor):
         ini_ = filters['dateIni']
         end_ = filters['dateEnd']
         user_ = filters['userId']
+        dashboard_token_ = request.args.get('dashboardToken')
+        if dashboard_token_ == 'undefined':
+            dashboard_token_ = None
         filters_metric_ = "SELECT " + metric_1 + ", sum(" + filters_value_ + ") " \
                                                                              "FROM heartbeat where date_time " \
                                                                              "between '" + ini_ + "' and '" + end_ + \
-                          "' and user_id = " + str(user_) + \
-                          " group by " + metric_1
+                          "' "
+        if dashboard_token_ is not None:
+            dash_info = generic_repository.get_object("external_dash", ["hash"], {"hash": dashboard_token_})
+            if dash_info is not None:
+                filters_metric_ += " and client_name = '" + str(dash_info['client_name']) + "'"
+            else:
+                filters_metric_ += " and user_id = " + str(user_)
+        else:
+            filters_metric_ += " and user_id = " + str(user_)
+        filters_metric_ += " group by " + metric_1
         cursor.execute(
             filters_metric_)
         heartbeats = cursor.fetchall()

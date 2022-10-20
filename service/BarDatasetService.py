@@ -6,6 +6,7 @@ from service.Interceptor import Interceptor
 filters_repository = FiltersRepository()
 
 
+
 class BarDataSetService(Interceptor):
     def __init__(self, heartbeat_repository):
         self.heartbeat_repository = heartbeat_repository

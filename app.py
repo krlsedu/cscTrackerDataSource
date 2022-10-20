@@ -1,6 +1,7 @@
 import json
 
 from flask import Flask, request
+from flask_cors import CORS, cross_origin
 from prometheus_flask_exporter import PrometheusMetrics
 
 from repository.HeartbeatRepository import HeartbeatRepository
@@ -10,6 +11,8 @@ from service.PersistService import PersistService
 from service.SeriesService import SeriesService
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 # group by endpoint rather than path
 metrics = PrometheusMetrics(app, group_by='endpoint')
@@ -22,20 +25,24 @@ persist_service = PersistService
 
 
 @app.route('/dataset', methods=['GET'])
+@cross_origin()
 def dataset():
     return json.dumps(dataset_service.get_dataset()), 200, {'Content-Type': 'application/json'}
 
 
 @app.route('/series', methods=['GET'])
+@cross_origin()
 def serie():
     return json.dumps(series_repository.get_series()), 200, {'Content-Type': 'application/json'}
 
 
 @app.route('/bar-dataset', methods=['GET'])
+@cross_origin()
 def bar_dataset():
     return json.dumps(bar_dataset_service.get_dataset()), 200, {'Content-Type': 'application/json'}
 
 @app.route('/save', methods=['POST'])
+@cross_origin()
 def post_metrics():
     json = request.get_json()
     return persist_service.persist(json)
