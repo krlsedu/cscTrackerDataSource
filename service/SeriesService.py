@@ -1,3 +1,6 @@
+
+from datetime import datetime
+
 from repository.FiltersRepository import FiltersRepository
 from service.Interceptor import Interceptor
 
@@ -31,12 +34,15 @@ class SeriesService(Interceptor):
         series = []
         for key in map_series:
             heartbeats = map_series[key]
-            list = sorted(heartbeats, key=lambda x: x['date_time'].timestamp(), reverse=False)
+            list = sorted(heartbeats, key=lambda x: datetime.strptime(x['date_time'], '%Y-%m-%d %H:%M:%S.%f')
+                          .timestamp(), reverse=False)
             start_time = None
             end_time = None
             for heartbeat in list:
-                start_time_atu = int(heartbeat['date_time'].timestamp() * 1000)
-                end_time_atu = int(heartbeat['date_time_end'].timestamp() * 1000)
+                dt_time = datetime.strptime(heartbeat['date_time'], '%Y-%m-%d %H:%M:%S.%f')
+                start_time_atu = int(dt_time.timestamp() * 1000)
+                dt_time_end = datetime.strptime(heartbeat['date_time_end'], '%Y-%m-%d %H:%M:%S.%f')
+                end_time_atu = int(dt_time_end.timestamp() * 1000)
                 if start_time is None:
                     start_time = start_time_atu
                 if end_time is None:
