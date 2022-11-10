@@ -1,5 +1,6 @@
 import pandas
 
+from datetime import datetime
 from repository.FiltersRepository import FiltersRepository
 from service.Interceptor import Interceptor
 
@@ -77,7 +78,7 @@ class BarDataSetService(Interceptor):
             for heartbeat in heartbeats:
                 metric_ = heartbeat[group]
                 if mask is not None:
-                    metric_ = mask.format(metric_)
+                    metric_ = mask.format(datetime.strptime(metric_, '%Y-%m-%d %H:%M:%S.%f'))
                 if metric_ is not None:
                     if metric_ in date_group:
                         date_group[metric_].append(heartbeat)
