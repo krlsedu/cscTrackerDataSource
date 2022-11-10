@@ -78,9 +78,9 @@ class HeartbeatRepository(Interceptor):
         dashboard_token_ = request.args.get('dashboardToken')
         if dashboard_token_ == 'undefined':
             dashboard_token_ = None
-        filters_metric_ = "SELECT " + metric_1 + " as label, sum(" + filters_value_ + ") as value" \
-                                                                                      "FROM heartbeat where date_time " \
-                                                                                      "between '" + ini_ + "' and '" + end_ + \
+        filters_metric_ = "SELECT " + metric_1 + " as label, sum(" + filters_value_ + ") as value " \
+                                                                      "FROM heartbeat where date_time " \
+                                                                      "between '" + ini_ + "' and '" + end_ + \
                           "' "
         if dashboard_token_ is not None:
             dash_info = http_repository.get_object("external_dash", ["hash"], {"hash": dashboard_token_})
