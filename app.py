@@ -7,7 +7,6 @@ from prometheus_flask_exporter import PrometheusMetrics
 from repository.HeartbeatRepository import HeartbeatRepository
 from service.BarDatasetService import BarDataSetService
 from service.DatasetService import DatasetService
-from service.PersistService import PersistService
 from service.SeriesService import SeriesService
 
 app = Flask(__name__)
@@ -21,8 +20,6 @@ heartbeats_service = HeartbeatRepository()
 series_repository = SeriesService(heartbeats_service)
 dataset_service = DatasetService(heartbeats_service)
 bar_dataset_service = BarDataSetService(heartbeats_service)
-persist_service = PersistService
-
 
 @app.route('/dataset', methods=['GET'])
 @cross_origin()
@@ -40,12 +37,6 @@ def serie():
 @cross_origin()
 def bar_dataset():
     return json.dumps(bar_dataset_service.get_dataset()), 200, {'Content-Type': 'application/json'}
-
-@app.route('/save', methods=['POST'])
-@cross_origin()
-def post_metrics():
-    json = request.get_json()
-    return persist_service.persist(json)
 
 
 if __name__ == '__main__':

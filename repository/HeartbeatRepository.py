@@ -1,20 +1,15 @@
-import psycopg2
 from flask import request
 
 from model.Heartbeat import Heartbeat
-from repository.GenericRepository import GenericRepository
+from repository.HttpRepository import HttpRepository
 from service.Interceptor import Interceptor
 
-generic_repository = GenericRepository()
+http_repository = HttpRepository()
 
 
 class HeartbeatRepository(Interceptor):
     def __init__(self):
-        self.conn = psycopg2.connect(
-            host="postgres",
-            database="postgres",
-            user="postgres",
-            password="postgres")
+        super().__init__()
 
     def read_heartbeats(self, filters, keys=None):
         ini_ = filters['dateIni']
@@ -33,36 +28,14 @@ class HeartbeatRepository(Interceptor):
                                 + ini_ + "' and '" + end_ + "'"
 
         if dashboard_token_ is not None:
-            dash_info = generic_repository.get_object("external_dash", ["hash"], {"hash": dashboard_token_})
+            dash_info = http_repository.get_object("external_dash", ["hash"], {"hash": dashboard_token_})
             if dash_info is not None:
                 select_heartbeats += " and client_name = '" + str(dash_info['client_name']) + "'"
             else:
                 select_heartbeats += " and user_id = " + str(user_)
         else:
             select_heartbeats += " and user_id = " + str(user_)
-
-        cursor, cursor_heartbeats = self.execute_query(select_heartbeats)
-
-        heartbeats = []
-        for row in cursor_heartbeats:
-            hb = {}
-            if keys is None:
-                for key in heartbeat.__dict__:
-                    hb[key] = row[heartbeat.__dict__[key]]
-            else:
-                i = 0
-                for key in keys:
-                    hb[key] = row[i]
-                    i += 1
-            heartbeats.append(hb)
-        cursor.close()
-        return heartbeats
-
-    def execute_query(self, select_heartbeats):
-        cursor = self.conn.cursor()
-        cursor.execute(select_heartbeats)
-        cursor_heartbeats = cursor.fetchall()
-        return cursor, cursor_heartbeats
+        return http_repository.execute_select(select_heartbeats)
 
     def ajust_heartbeats(self, heartbeats):
         colision_hb = []
@@ -97,8 +70,6 @@ class HeartbeatRepository(Interceptor):
         return False
 
     def get_grouped(self, filters):
-        cursor = self.conn.cursor()
-
         metric_1 = filters['metric']
         filters_value_ = filters['value']
         ini_ = filters['dateIni']
@@ -107,12 +78,12 @@ class HeartbeatRepository(Interceptor):
         dashboard_token_ = request.args.get('dashboardToken')
         if dashboard_token_ == 'undefined':
             dashboard_token_ = None
-        filters_metric_ = "SELECT " + metric_1 + ", sum(" + filters_value_ + ") " \
-                                                                             "FROM heartbeat where date_time " \
-                                                                             "between '" + ini_ + "' and '" + end_ + \
+        filters_metric_ = "SELECT " + metric_1 + " as label, sum(" + filters_value_ + ") as value" \
+                                                                                      "FROM heartbeat where date_time " \
+                                                                                      "between '" + ini_ + "' and '" + end_ + \
                           "' "
         if dashboard_token_ is not None:
-            dash_info = generic_repository.get_object("external_dash", ["hash"], {"hash": dashboard_token_})
+            dash_info = http_repository.get_object("external_dash", ["hash"], {"hash": dashboard_token_})
             if dash_info is not None:
                 filters_metric_ += " and client_name = '" + str(dash_info['client_name']) + "'"
             else:
@@ -120,8 +91,4 @@ class HeartbeatRepository(Interceptor):
         else:
             filters_metric_ += " and user_id = " + str(user_)
         filters_metric_ += " group by " + metric_1
-        cursor.execute(
-            filters_metric_)
-        heartbeats = cursor.fetchall()
-        cursor.close()
-        return heartbeats
+        return http_repository.execute_select(filters_metric_)

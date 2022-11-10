@@ -12,8 +12,8 @@ class DatasetService(Interceptor):
         heartbeats = self.heartbeat_repository.get_grouped(filters_repository.get_filters())
         datasets = []
         for row in heartbeats:
-            row_ = row[0]
+            row_ = row['label']
             if row_ is not None:
-                dataset = {'label': row_, 'value': int(row[1])}
+                dataset = {'label': row_, 'value': int(row['value'])}
                 datasets.append(dataset)
         return datasets
