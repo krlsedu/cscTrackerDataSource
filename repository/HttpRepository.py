@@ -3,7 +3,7 @@ from flask import request
 
 from service.Interceptor import Interceptor
 
-url_repository = 'http://repository:5000/'
+url_repository = 'http://bff:8080/repository/'
 
 
 class HttpRepository(Interceptor):
