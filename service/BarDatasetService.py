@@ -1,16 +1,94 @@
 import pandas
 
-from datetime import datetime
+from datetime import datetime, timezone
 from repository.FiltersRepository import FiltersRepository
+from repository.HttpRepository import HttpRepository
 from service.Interceptor import Interceptor
 
 filters_repository = FiltersRepository()
-
+http_repository = HttpRepository()
 
 
 class BarDataSetService(Interceptor):
     def __init__(self, heartbeat_repository):
         self.heartbeat_repository = heartbeat_repository
+
+    def get_generic_dataset(self, table, args=None, headers=None):
+        args_ = {}
+        metric_ = None
+        date_field_ = None
+        mask_ = None
+        value_ = None
+        for key, value in args.items():
+            if key == "metric":
+                metric_ = value
+            elif key == "date_field":
+                date_field_ = value
+            elif key == "mask":
+                mask_ = value
+            elif key == "value":
+                value_ = value
+            else:
+                args_[key] = value
+        if metric_ is None:
+            metric_ = "value"
+        if date_field_ is None:
+            date_field_ = "date"
+        if value_ is None:
+            value_ = "value"
+        if mask_ is None:
+            mask_ = "{:%m/%Y}"
+        elif mask_ == "month":
+            mask_ = "{:%m/%Y}"
+        elif mask_ == "day":
+            mask_ = "{:%d/%m/%Y}"
+        elif mask_ == "hour":
+            mask_ = "{:%d/%m/%Y %H}"
+        elif mask_ == "minute":
+            mask_ = "{:%d/%m/%Y %H:%M}"
+        elif mask_ == "second":
+            mask_ = "{:%d/%m/%Y %H:%M:%S}"
+
+        keys_, values_ = http_repository.get_filters(args_)
+        objects = http_repository.get_objects(table, keys_, values_, headers)
+
+        date_group = self.group_data(objects, group=date_field_, mask=mask_)
+
+        group = {}
+        metrics = []
+        categories = []
+        for date in date_group:
+            if date not in categories:
+                categories.append(date)
+            metric_group = self.group_data(date_group[date], group=metric_)
+            for metric in metric_group:
+                if metric not in metrics:
+                    metrics.append(metric)
+            group[date] = metric_group
+        dataset = {'categories': categories, 'series': []}
+        series = {}
+        categories.sort()
+        for category in categories:
+            for metric in metrics:
+                try:
+                    heartbeats = group[category][metric]
+                    if metric in series:
+                        series[metric].append(self.get_sum(heartbeats, group=value_))
+                    else:
+                        series[metric] = []
+                        series[metric].append(self.get_sum(heartbeats, group=value_))
+                except Exception as e:
+                    try:
+                        series[metric].append(0)
+                    except Exception as e:
+                        series[metric] = []
+                        series[metric].append(0)
+        for serie in series:
+            serie_ = {}
+            serie_['name'] = serie
+            serie_['data'] = series[serie]
+            dataset['series'].append(serie_)
+        return dataset
 
     def get_dataset(self):
         filters = filters_repository.get_filters()
@@ -77,8 +155,14 @@ class BarDataSetService(Interceptor):
         try:
             for heartbeat in heartbeats:
                 metric_ = heartbeat[group]
+                if metric_ is None:
+                    metric_ = 'Uncategorized'
                 if mask is not None:
-                    metric_ = mask.format(datetime.strptime(metric_, '%Y-%m-%d %H:%M:%S.%f'))
+                    try:
+                        metric_ = mask.format(
+                            datetime.strptime(metric_, '%Y-%m-%d %H:%M:%S.%f').replace(tzinfo=timezone.utc))
+                    except Exception as e:
+                        metric_ = mask.format(datetime.strptime(metric_, '%Y-%m-%d').replace(tzinfo=timezone.utc))
                 if metric_ is not None:
                     if metric_ in date_group:
                         date_group[metric_].append(heartbeat)
