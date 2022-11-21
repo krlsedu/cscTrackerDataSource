@@ -84,9 +84,7 @@ class BarDataSetService(Interceptor):
                         series[metric] = []
                         series[metric].append(0)
         for serie in series:
-            serie_ = {}
-            serie_['name'] = serie
-            serie_['data'] = series[serie]
+            serie_ = {'name': serie, 'data': series[serie]}
             dataset['series'].append(serie_)
         return dataset
 
