@@ -18,7 +18,7 @@ cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 # group by endpoint rather than path
-metrics = PrometheusMetrics(app, group_by='endpoint')
+metrics = PrometheusMetrics(app, group_by='endpoint', default_labels={'application': 'CscTrackerDataSource'})
 
 heartbeats_service = HeartbeatRepository()
 series_repository = SeriesService(heartbeats_service)
