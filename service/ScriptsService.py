@@ -25,10 +25,10 @@ class ScriptsService(Interceptor):
         for param in params:
             params_[param] = params[param]
 
-        if 'date_ini' not in params_:
-            params_['date_ini'] = '2020-01-01'
-        if 'date_end' not in params_:
-            params_['date_end'] = datetime.now().strftime("%Y-%m-%d")
+        if 'data_ini' not in params_:
+            params_['data_ini'] = '2020-01-01'
+        if 'data_end' not in params_:
+            params_['data_end'] = datetime.now().strftime("%Y-%m-%d")
 
         for key in params_:
             script = script.replace(":" + key, "'" + params_[key] + "'")
