@@ -11,6 +11,7 @@ from repository.HeartbeatRepository import HeartbeatRepository
 from service.BarDatasetService import BarDataSetService
 from service.DatasetService import DatasetService
 from service.LoadBalancerRegister import LoadBalancerRegister
+from service.ScriptsService import ScriptsService
 from service.SeriesService import SeriesService
 
 app = Flask(__name__)
@@ -24,6 +25,7 @@ heartbeats_service = HeartbeatRepository()
 series_repository = SeriesService(heartbeats_service)
 dataset_service = DatasetService(heartbeats_service)
 bar_dataset_service = BarDataSetService(heartbeats_service)
+scripts_service = ScriptsService()
 balancer = LoadBalancerRegister()
 
 
@@ -49,6 +51,13 @@ class Encoder(json.JSONEncoder):
 @cross_origin()
 def dataset():
     return json.dumps(dataset_service.get_dataset()), 200, {'Content-Type': 'application/json'}
+
+
+@app.route('/script/<script_name>', methods=['GET'])
+@cross_origin()
+def scripts(script_name):
+    json_data = scripts_service.execute_script(script_name, request.headers, request.args)
+    return json.dumps(json_data), 200, {'Content-Type': 'application/json'}
 
 
 @app.route('/series', methods=['GET'])
