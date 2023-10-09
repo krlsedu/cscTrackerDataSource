@@ -27,7 +27,7 @@ class ScriptsService(Interceptor):
 
         if 'data_ini' not in params_:
             params_['data_ini'] = '2020-01-01'
-        if 'data_end' not in params_:
+        if 'data_fim' not in params_:
             params_['data_fim'] = datetime.now().strftime("%Y-%m-%d")
 
         for key in params_:
