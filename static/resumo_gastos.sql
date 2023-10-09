@@ -48,7 +48,13 @@ from (select *
                   from dividends d
                   where d.date_payment >= :data_ini
                     and d.date_payment <= :data_fim
-                    and d.user_id = :user_id) as group_incomes (group_income, income)) as group_incomes (group_income, entradas)) as t,
+                    and d.user_id = :user_id
+                  union
+                  select 'Rendas', sum(p.quantity * p.value)
+                  from profit_loss p
+                  where p.user_id = :user_id
+                    and p.date_sell >= :data_ini
+                    and p.date_sell <= :data_fim) as group_incomes (group_income, income)) as group_incomes (group_income, entradas)) as t,
      group_costs gc
 where t.group_cost = gc.group_cost
   and gc.user_id = :user_id
