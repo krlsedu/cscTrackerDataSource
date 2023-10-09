@@ -1,4 +1,4 @@
-select gc.group_cost, round(saida / entradas, 6) as percentage, gc.ideal_value / 100, saida, entradas
+select gc.group_cost, round(saida / entradas, 6) as percentage, gc.ideal_value / 100 as ideal_value, saida, entradas
 from (select *
       from (select cgc.group_cost, sum(t.value)
             from transactions t,
