@@ -1,6 +1,8 @@
-import pandas
-
 from datetime import datetime, timezone
+
+import pandas
+from flask import request
+
 from repository.FiltersRepository import FiltersRepository
 from repository.HttpRepository import HttpRepository
 from service.Interceptor import Interceptor
@@ -95,7 +97,14 @@ class BarDataSetService(Interceptor):
 
         heartbeats = self.heartbeat_repository.read_heartbeats(filters, keys)
 
-        date_group = self.group_data(heartbeats, group='date_time', mask='{:%d/%m/%Y}')
+        args = request.args
+        if 'with_uncategorized' in args:
+            with_uncategorized = args['with_uncategorized'] == 'True'
+        else:
+            with_uncategorized = False
+
+        date_group = self.group_data(heartbeats, group='date_time', mask='{:%d/%m/%Y}',
+                                     with_uncategorized=with_uncategorized)
 
         group = {}
         metrics = []
@@ -108,7 +117,8 @@ class BarDataSetService(Interceptor):
             if date_ not in categories:
                 categories.append(date_)
         for date in date_group:
-            metric_group = self.group_data(date_group[date], group=filters['metric'])
+            metric_group = self.group_data(date_group[date], group=filters['metric'], mask=None,
+                                           with_uncategorized=with_uncategorized)
             for metric in metric_group:
                 if metric not in metrics:
                     metrics.append(metric)
@@ -148,12 +158,12 @@ class BarDataSetService(Interceptor):
             print(e)
         return sum
 
-    def group_data(self, heartbeats, group=None, mask=None):
+    def group_data(self, heartbeats, group=None, mask=None, with_uncategorized=False):
         date_group = {}
         try:
             for heartbeat in heartbeats:
                 metric_ = heartbeat[group]
-                if metric_ is None:
+                if metric_ is None and with_uncategorized:
                     metric_ = 'Uncategorized'
                 if mask is not None:
                     try:
