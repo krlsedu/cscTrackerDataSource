@@ -31,7 +31,8 @@ class BarDataSetService(Interceptor):
             elif key == "value":
                 value_ = value
             else:
-                args_[key] = value
+                if key != "with_uncategorized":
+                    args_[key] = value
         if metric_ is None:
             metric_ = "value"
         if date_field_ is None:
