@@ -1,8 +1,11 @@
 
 from datetime import datetime
 
+import pytz
+
 from repository.FiltersRepository import FiltersRepository
 from service.Interceptor import Interceptor
+from service.Utils import Utils
 
 filters_repository = FiltersRepository()
 
@@ -39,9 +42,19 @@ class SeriesService(Interceptor):
             start_time = None
             end_time = None
             for heartbeat in list:
-                dt_time = datetime.strptime(heartbeat['date_time'], '%Y-%m-%d %H:%M:%S.%f')
+                dt_time = datetime.strptime(Utils.get_format_date_time_in_tz(heartbeat['date_time'],
+                                                                             '%Y-%m-%d %H:%M:%S.%f',
+                                                                             'UTC',
+                                                                             'America/Sao_Paulo'),
+                                            '%Y-%m-%d %H:%M:%S.%f')
+                dt_time = pytz.UTC.localize(dt_time)
                 start_time_atu = int(dt_time.timestamp() * 1000)
-                dt_time_end = datetime.strptime(heartbeat['date_time_end'], '%Y-%m-%d %H:%M:%S.%f')
+                dt_time_end = datetime.strptime(Utils.get_format_date_time_in_tz(heartbeat['date_time_end'],
+                                                                                 '%Y-%m-%d %H:%M:%S.%f',
+                                                                                 'UTC',
+                                                                                 'America/Sao_Paulo'),
+                                                '%Y-%m-%d %H:%M:%S.%f')
+                dt_time_end = pytz.UTC.localize(dt_time_end)
                 end_time_atu = int(dt_time_end.timestamp() * 1000)
                 if start_time is None:
                     start_time = start_time_atu

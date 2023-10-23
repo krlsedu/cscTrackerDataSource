@@ -1,6 +1,8 @@
 import os
 from datetime import datetime
 
+import pytz
+
 from service.Interceptor import Interceptor
 
 
@@ -28,3 +30,15 @@ class Utils(Interceptor):
         content = file_handle.read()
         file_handle.close()
         return content
+
+    @staticmethod
+    def get_format_date_time_in_tz(dt_string, format, original_tz='America/Sao_Paulo', new_tz='UTC'):
+        dt_obj = datetime.strptime(dt_string, format)
+
+        original_tz_ = pytz.timezone(original_tz)
+        dt_obj = original_tz_.localize(dt_obj)
+
+        new_tz_ = pytz.timezone(new_tz)
+        new_dt_obj = dt_obj.astimezone(new_tz_)
+
+        return new_dt_obj.strftime(format)
