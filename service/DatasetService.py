@@ -64,4 +64,6 @@ class DatasetService(Interceptor):
         values = []
         for key, value in date_group.items():
             values.append({'label': key, 'value': value})
+
+        values = sorted(values, key=lambda x: x['value'], reverse=True)
         return values
