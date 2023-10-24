@@ -53,6 +53,14 @@ def dataset():
     return json.dumps(dataset_service.get_dataset()), 200, {'Content-Type': 'application/json'}
 
 
+@app.route('/dataset/<table>', methods=['GET'])
+@cross_origin()
+def generic_dataset(table):
+    return json.dumps(dataset_service.get_generic_dataset(table, request.args, request.headers), cls=Encoder,
+                      ensure_ascii=False), 200, {
+        'Content-Type': 'application/json'}
+
+
 @app.route('/script/<script_name>', methods=['GET'])
 @cross_origin()
 def scripts(script_name):
