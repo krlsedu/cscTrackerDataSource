@@ -1,19 +1,24 @@
+import logging
 from datetime import datetime, timezone
 
 import pandas
-from flask import request
+from csctracker_py_core.repository.http_repository import HttpRepository
+from csctracker_py_core.repository.remote_repository import RemoteRepository
 
 from repository.FiltersRepository import FiltersRepository
-from repository.HttpRepository import HttpRepository
-from service.Interceptor import Interceptor
-
-filters_repository = FiltersRepository()
-http_repository = HttpRepository()
 
 
-class BarDataSetService(Interceptor):
-    def __init__(self, heartbeat_repository):
+class BarDataSetService:
+    def __init__(self,
+                 heartbeat_repository,
+                 filters_repository: FiltersRepository,
+                 remote_repository: RemoteRepository,
+                 http_repository: HttpRepository):
+        self.logger = logging.getLogger()
+        self.filters_repository = filters_repository
+        self.remote_repository = remote_repository
         self.heartbeat_repository = heartbeat_repository
+        self.http_repository = http_repository
 
     def get_generic_dataset(self, table, args=None, headers=None):
         args_ = {}
@@ -52,8 +57,7 @@ class BarDataSetService(Interceptor):
         elif mask_ == "second":
             mask_ = "{:%d/%m/%Y %H:%M:%S}"
 
-        keys_, values_ = http_repository.get_filters(args_)
-        objects = http_repository.get_objects(table, keys_, values_, headers)
+        objects = self.remote_repository.get_objects(table, data=args_, headers=headers)
 
         date_group = self.group_data(objects, group=date_field_, mask=mask_)
 
@@ -92,13 +96,13 @@ class BarDataSetService(Interceptor):
         return dataset
 
     def get_dataset(self):
-        filters = filters_repository.get_filters()
+        filters = self.filters_repository.get_filters()
 
         keys = [filters['metric'], filters['value'], 'date_time']
 
         heartbeats = self.heartbeat_repository.read_heartbeats(filters, keys)
 
-        args = request.args
+        args = self.http_repository.get_args()
         if 'with_uncategorized' in args:
             with_uncategorized = args['with_uncategorized'] == 'True'
         else:
@@ -156,7 +160,7 @@ class BarDataSetService(Interceptor):
                 if metric_ is not None:
                     sum += metric_
         except Exception as e:
-            print(e)
+            self.logger.exception(e)
         return sum
 
     def group_data(self, heartbeats, group=None, mask=None, with_uncategorized=False):
@@ -179,5 +183,5 @@ class BarDataSetService(Interceptor):
                         date_group[metric_] = []
                         date_group[metric_].append(heartbeat)
         except Exception as e:
-            print(e)
+            self.logger.exception(e)
         return date_group

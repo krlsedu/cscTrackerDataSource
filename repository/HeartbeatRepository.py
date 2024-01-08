@@ -1,21 +1,22 @@
-from flask import request
+import logging
+
+from csctracker_py_core.repository.http_repository import HttpRepository
+from csctracker_py_core.repository.remote_repository import RemoteRepository
 
 from model.Heartbeat import Heartbeat
-from repository.HttpRepository import HttpRepository
-from service.Interceptor import Interceptor
-
-http_repository = HttpRepository()
 
 
-class HeartbeatRepository(Interceptor):
-    def __init__(self):
-        super().__init__()
+class HeartbeatRepository:
+    def __init__(self, remote_repository: RemoteRepository, http_repository: HttpRepository):
+        self.logger = logging.getLogger()
+        self.remote_repository = remote_repository
+        self.http_repository = http_repository
 
     def read_heartbeats(self, filters, keys=None):
         ini_ = filters['dateIni']
         end_ = filters['dateEnd']
         user_ = filters['userId']
-        dashboard_token_ = request.args.get('dashboardToken')
+        dashboard_token_ = self.http_repository.get_args().get('dashboardToken')
         if dashboard_token_ == 'undefined':
             dashboard_token_ = None
         heartbeat = Heartbeat()
@@ -28,14 +29,18 @@ class HeartbeatRepository(Interceptor):
                                 + ini_ + "' and '" + end_ + "'"
 
         if dashboard_token_ is not None:
-            dash_info = http_repository.get_object("external_dash", ["hash"], {"hash": dashboard_token_})
+            dash_info = self.remote_repository.get_object("external_dash",
+                                                          ["hash"],
+                                                          {"hash": dashboard_token_},
+                                                          headers=self.http_repository.get_headers())
             if dash_info is not None:
                 select_heartbeats += " and client_name = '" + str(dash_info['client_name']) + "'"
             else:
                 select_heartbeats += " and user_id = " + str(user_)
         else:
             select_heartbeats += " and user_id = " + str(user_)
-        return http_repository.execute_select(select_heartbeats)
+        return self.remote_repository.execute_select(select_heartbeats,
+                                                     headers=self.http_repository.get_headers())
 
     def ajust_heartbeats(self, heartbeats):
         colision_hb = []
@@ -75,15 +80,18 @@ class HeartbeatRepository(Interceptor):
         ini_ = filters['dateIni']
         end_ = filters['dateEnd']
         user_ = filters['userId']
-        dashboard_token_ = request.args.get('dashboardToken')
+        dashboard_token_ = self.http_repository.get_args().get('dashboardToken')
         if dashboard_token_ == 'undefined':
             dashboard_token_ = None
         filters_metric_ = "SELECT " + metric_1 + " as label, sum(" + filters_value_ + ") as value " \
-                                                                      "FROM heartbeat where date_time " \
-                                                                      "between '" + ini_ + "' and '" + end_ + \
+                                                                                      "FROM heartbeat where date_time " \
+                                                                                      "between '" + ini_ + "' and '" + end_ + \
                           "' "
         if dashboard_token_ is not None:
-            dash_info = http_repository.get_object("external_dash", ["hash"], {"hash": dashboard_token_})
+            dash_info = self.remote_repository.get_object("external_dash",
+                                                          ["hash"],
+                                                          {"hash": dashboard_token_},
+                                                          headers=self.http_repository.get_headers())
             if dash_info is not None:
                 filters_metric_ += " and client_name = '" + str(dash_info['client_name']) + "'"
             else:
@@ -91,4 +99,4 @@ class HeartbeatRepository(Interceptor):
         else:
             filters_metric_ += " and user_id = " + str(user_)
         filters_metric_ += " group by " + metric_1
-        return http_repository.execute_select(filters_metric_)
+        return self.remote_repository.execute_select(filters_metric_, headers=self.http_repository.get_headers())

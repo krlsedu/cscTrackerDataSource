@@ -1,21 +1,20 @@
-
+import logging
 from datetime import datetime
 
 import pytz
 
 from repository.FiltersRepository import FiltersRepository
-from service.Interceptor import Interceptor
 from service.Utils import Utils
 
-filters_repository = FiltersRepository()
 
-
-class SeriesService(Interceptor):
-    def __init__(self, heartbeat_repository):
+class SeriesService:
+    def __init__(self, heartbeat_repository, filters_repository: FiltersRepository):
+        self.logger = logging.getLogger()
+        self.filters_repository = filters_repository
         self.heartbeat_repository = heartbeat_repository
 
     def get_series(self):
-        filters = filters_repository.get_filters()
+        filters = self.filters_repository.get_filters()
         metric = filters['metric']
 
         keys = [filters['metric'], filters['value'], 'date_time', 'date_time_end']
@@ -33,7 +32,7 @@ class SeriesService(Interceptor):
                         map_series[metric_] = []
                         map_series[metric_].append(heartbeat)
         except Exception as e:
-            print(e)
+            self.logger.exception(e)
         series = []
         for key in map_series:
             heartbeats = map_series[key]

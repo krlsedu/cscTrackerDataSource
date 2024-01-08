@@ -1,22 +1,27 @@
-from flask import request
+import logging
+
+from csctracker_py_core.repository.http_repository import HttpRepository
+from csctracker_py_core.repository.remote_repository import RemoteRepository
 
 from repository.FiltersRepository import FiltersRepository
-from repository.HttpRepository import HttpRepository
-from service.Interceptor import Interceptor
-
-filters_repository = FiltersRepository()
-http_repository = HttpRepository()
 
 
-class DatasetService(Interceptor):
-    def __init__(self, heartbeat_repository):
+class DatasetService:
+    def __init__(self, heartbeat_repository,
+                 filters_repository: FiltersRepository,
+                 remote_repository: RemoteRepository,
+                 http_repository: HttpRepository):
+        self.logger = logging.getLogger()
+        self.filters_repository = filters_repository
+        self.remote_repository = remote_repository
+        self.http_repository = http_repository
         self.heartbeat_repository = heartbeat_repository
 
     def get_dataset(self):
-        heartbeats = self.heartbeat_repository.get_grouped(filters_repository.get_filters())
+        heartbeats = self.heartbeat_repository.get_grouped(self.filters_repository.get_filters())
         datasets = []
 
-        args = request.args
+        args = self.http_repository.get_args()
         if 'with_uncategorized' in args:
             with_uncategorized = args['with_uncategorized'] == 'True'
         else:
@@ -41,9 +46,7 @@ class DatasetService(Interceptor):
                 value_ = value
             elif key != "with_uncategorized":
                 args_[key] = value
-
-        keys_, values_ = http_repository.get_filters(args_)
-        rows = http_repository.get_objects(table, keys_, values_, headers)
+        rows = self.remote_repository.get_objects(table, data=args_, headers=headers)
         return self.group_data(rows, metric_, with_uncategorized=args['with_uncategorized'], value=value_)
 
     def group_data(self, rows, metric, with_uncategorized=False, value='value'):
@@ -59,7 +62,7 @@ class DatasetService(Interceptor):
                     else:
                         date_group[metric_] = row[value]
         except Exception as e:
-            print(e)
+            self.logger.exception(e)
 
         values = []
         for key, value in date_group.items():

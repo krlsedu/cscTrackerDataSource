@@ -1,18 +1,15 @@
-import os
 from datetime import datetime
 
-import requests as requests
+from csctracker_py_core.repository.remote_repository import RemoteRepository
 
-from service.Interceptor import Interceptor
 from service.Utils import Utils
 
 utils = Utils()
-url_repository = os.environ['URL_REPOSITORY'] + '/'
 
 
-class ScriptsService(Interceptor):
-    def __init__(self):
-        super().__init__()
+class ScriptsService:
+    def __init__(self, remote_repository: RemoteRepository):
+        self.remote_repository = remote_repository
 
     def get_script(self, script_name):
         script = utils.read_file("static/" + script_name + ".sql")
@@ -33,6 +30,4 @@ class ScriptsService(Interceptor):
         for key in params_:
             script = script.replace(":" + key, "'" + params_[key] + "'")
 
-        body = {'command': script}
-        response = requests.post(f"{url_repository}command/select", headers=headers, json=body)
-        return response.json()
+        return self.remote_repository.execute_select(script, headers)

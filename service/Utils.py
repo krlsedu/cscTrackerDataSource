@@ -1,12 +1,9 @@
 import os
+import pytz
 from datetime import datetime
 
-import pytz
 
-from service.Interceptor import Interceptor
-
-
-class Utils(Interceptor):
+class Utils:
     def __init__(self):
         super().__init__()
 

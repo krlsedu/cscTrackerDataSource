@@ -1,40 +1,28 @@
 import datetime
 import decimal
 import json
-import threading
 
-from flask import Flask, request
-from flask_cors import CORS, cross_origin
-from prometheus_flask_exporter import PrometheusMetrics
+from csctracker_py_core.repository.http_repository import cross_origin
+from csctracker_py_core.starter import Starter
 
+from repository.FiltersRepository import FiltersRepository
 from repository.HeartbeatRepository import HeartbeatRepository
 from service.BarDatasetService import BarDataSetService
 from service.DatasetService import DatasetService
-from service.LoadBalancerRegister import LoadBalancerRegister
 from service.ScriptsService import ScriptsService
 from service.SeriesService import SeriesService
 
-app = Flask(__name__)
-cors = CORS(app)
-app.config['CORS_HEADERS'] = 'Content-Type'
+starter = Starter()
+app = starter.get_app()
+http_repository = starter.get_http_repository()
+remote_repository = starter.get_remote_repository()
 
-# group by endpoint rather than path
-metrics = PrometheusMetrics(app, group_by='endpoint', default_labels={'application': 'CscTrackerDataSource'})
-
-heartbeats_service = HeartbeatRepository()
-series_repository = SeriesService(heartbeats_service)
-dataset_service = DatasetService(heartbeats_service)
-bar_dataset_service = BarDataSetService(heartbeats_service)
-scripts_service = ScriptsService()
-balancer = LoadBalancerRegister()
-
-
-def schedule_job():
-    balancer.register_service('datasource')
-
-
-t1 = threading.Thread(target=schedule_job, args=())
-t1.start()
+heartbeats_service = HeartbeatRepository(http_repository, remote_repository)
+filters_repository = FiltersRepository(http_repository)
+series_repository = SeriesService(heartbeats_service, filters_repository)
+dataset_service = DatasetService(heartbeats_service, filters_repository, remote_repository, http_repository)
+bar_dataset_service = BarDataSetService(heartbeats_service, filters_repository, remote_repository, http_repository)
+scripts_service = ScriptsService(remote_repository)
 
 
 class Encoder(json.JSONEncoder):
@@ -56,15 +44,21 @@ def dataset():
 @app.route('/dataset/<table>', methods=['GET'])
 @cross_origin()
 def generic_dataset(table):
-    return json.dumps(dataset_service.get_generic_dataset(table, request.args, request.headers), cls=Encoder,
-                      ensure_ascii=False), 200, {
-        'Content-Type': 'application/json'}
+    return (
+        json.dumps(dataset_service.get_generic_dataset(table,
+                                                       http_repository.get_args(),
+                                                       http_repository.get_headers()),
+                   cls=Encoder,
+                   ensure_ascii=False),
+        200,
+        {'Content-Type': 'application/json'}
+    )
 
 
 @app.route('/script/<script_name>', methods=['GET'])
 @cross_origin()
 def scripts(script_name):
-    json_data = scripts_service.execute_script(script_name, request.headers, request.args)
+    json_data = scripts_service.execute_script(script_name, http_repository.get_headers(), http_repository.get_args())
     return json.dumps(json_data), 200, {'Content-Type': 'application/json'}
 
 
@@ -83,10 +77,15 @@ def bar_dataset():
 @app.route('/bar-dataset/<table>', methods=['GET'])
 @cross_origin()
 def bar_generic_dataset(table):
-    return json.dumps(bar_dataset_service.get_generic_dataset(table, request.args, request.headers), cls=Encoder,
-                      ensure_ascii=False), 200, {
-        'Content-Type': 'application/json'}
+    return (
+        json.dumps(bar_dataset_service.get_generic_dataset(table,
+                                                           http_repository.get_args(),
+                                                           http_repository.get_headers()),
+                   cls=Encoder,
+                   ensure_ascii=False),
+        200,
+        {'Content-Type': 'application/json'}
+    )
 
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+starter.start()
