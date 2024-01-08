@@ -17,7 +17,7 @@ app = starter.get_app()
 http_repository = starter.get_http_repository()
 remote_repository = starter.get_remote_repository()
 
-heartbeats_service = HeartbeatRepository(http_repository, remote_repository)
+heartbeats_service = HeartbeatRepository(remote_repository, http_repository)
 filters_repository = FiltersRepository(http_repository)
 series_repository = SeriesService(heartbeats_service, filters_repository)
 dataset_service = DatasetService(heartbeats_service, filters_repository, remote_repository, http_repository)
