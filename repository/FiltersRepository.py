@@ -10,12 +10,6 @@ class FiltersRepository:
         pass
 
     def get_filters(self):
-        metric = self.http_repository.get_args().get('metric')
-        value = self.http_repository.get_args().get('value')
-        period = self.http_repository.get_args().get('period')
-        if value is None:
-            value = "timeSpentMillis"
-        self.logger.info("request.args", metric, value, period, self.http_repository.get_args())
         if self.http_repository.get_args().get('userName') is None:
             heeaders = {"userName": "krlsedu@gmail.com"}
             response = self.http_repository.get('http://backend:8080/heartbeats-filters',
