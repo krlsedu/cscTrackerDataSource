@@ -12,7 +12,7 @@ class FiltersRepository:
     def get_filters(self):
         metric = self.http_repository.get_args().get('metric')
         value = self.http_repository.get_args().get('value')
-        period = self.http_repository.get_args().args.get('period')
+        period = self.http_repository.get_args().get('period')
         if value is None:
             value = "timeSpentMillis"
         self.logger.info("request.args", metric, value, period, self.http_repository.get_args())
