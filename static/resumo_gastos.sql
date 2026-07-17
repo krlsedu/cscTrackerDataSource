@@ -27,12 +27,6 @@ from (select *
                 where usm_incres.user_id = :user_id
                 and usm_incres.movement_type = 1
                 and usm_incres.date >= :data_ini
-                and usm_incres.date <= :data_fim) -
-                (select coalesce (sum (quantity * usm_incres.price), 0)
-                from user_stocks_movements usm_incres
-                where usm_incres.user_id = :user_id
-                and usm_incres.movement_type = 2
-                and usm_incres.date >= :data_ini
                 and usm_incres.date <= :data_fim)
             order by group_cost) as group_costs (group_cost, saida),
            (select 'Rendas', sum(income)
